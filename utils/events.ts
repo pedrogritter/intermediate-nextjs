@@ -31,3 +31,30 @@ export const getEventsForDashboard = memoize(
     persist: true,
   }
 )
+
+export const getAllEvents = memoize(
+  async (userId: string) => {
+    await delay(2000)
+
+    const data = await db.query.events.findMany({
+      where: eq(events.createdById, userId),
+      orderBy: [asc(events.startOn)],
+    })
+
+    return data ?? []
+  },
+  {
+    revalidateTags: () => ['events'],
+    persist: true,
+  }
+)
+
+export const getEvent = memoize(
+  async (userId: string, eventId: string) => {
+    await delay(2000)
+    return db.query.events.findFirst({
+      where: and(eq(events.createdById, userId), eq(events.id, eventId)),
+    })
+  },
+  { persist: true, revalidateTags: (userID, eventId) => ['events', eventId] }
+)
