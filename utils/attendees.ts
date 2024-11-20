@@ -32,3 +32,27 @@ export const getAttendeesCountForDashboard = memoize(
     logid: 'dashboard:attendees',
   }
 )
+
+export const getGuestList = memoize(
+  async (userId: string) => {
+    await delay()
+    const uniqueAttendees = await db
+      .selectDistinct({
+        id: attendees.id,
+        name: attendees.name,
+        email: attendees.email,
+      })
+      .from(events)
+      .innerJoin(rsvps, eq(rsvps.eventId, events.id))
+      .innerJoin(attendees, eq(attendees.id, rsvps.attendeeId))
+      .where(eq(events.createdById, userId))
+      .orderBy(attendees.name)
+      .execute()
+
+    return uniqueAttendees
+  },
+  {
+    persist: true,
+    revalidateTags: () => ['guests'],
+  }
+)
